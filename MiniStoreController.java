@@ -256,52 +256,103 @@ public class MiniStoreController {
 
 
 
-
-    // Method to perform a pay-out from an account
-    public void doPayOut(Scanner sc) {
-        listCustomerAccounts(sc);
+--- add Customer Methode:
+    // Method to add a new customer
+    public void addCustomer(Scanner sc) {
         try {
-            System.out.println("\n--- Pay Out ---");
-            System.out.print("Account Number: ");
-            int accountNumber = Integer.parseInt(sc.nextLine());
-            Account account = accountDBI.getAccountByAccountNumber(accountNumber);
+            System.out.println("\n--- Add New Customer ---");
+            System.out.print("Surname: ");
+            String surname = sc.nextLine();
+            System.out.print("Name: ");
+            String name = sc.nextLine();
+            System.out.print("Gender (M/F): ");
+            String gender = sc.nextLine();
+            System.out.print("Birthday (YYYY-MM-DD): ");
+            String birthdayStr = sc.nextLine();
+            Date birthday = Date.valueOf(birthdayStr);
 
-            if (account != null) {
-                System.out.print("Amount to Pay Out: ");
-                double amount = Double.parseDouble(sc.nextLine());
-                if (account.payOut(amount)) {
-                    accountDBI.updateAccount(account);
-                    System.out.println("Pay Out successful. New balance: " + account.getBalance());
-                } else {
-                    System.out.println("Insufficient funds.");
-                }
-            } else {
-                System.out.println("Account not found.");
+            // Create Customer object
+            Customer customer = new Customer(0, surname, name, gender, birthday);
+            // Saving Customer in Database
+            customerDBI.addCustomer(customer);
+
+            // Generate account number
+            int accountNumber = generateAccountNumber();
+
+            // Select account type
+            System.out.println("Select Account Type:");
+            System.out.println("1. Checking Account");
+            System.out.println("2. Savings Account");
+            System.out.println("3. Fixed-Terms Account");
+            System.out.print("Selection: ");
+            int accountTypeSelection = sc.nextInt();
+
+            Account account;
+
+            switch (accountTypeSelection) {
+                case 1:
+                    account = new CheckingAcc(0, accountNumber, 0.0);
+                    break;
+                case 2:
+                    account = new SavingsAcc(0, accountNumber, 0.0);
+                    break;
+                case 3:
+                    account = new FixedTermsAcc(0, accountNumber, 0.0);
+                    break;
+                default:
+                    System.out.println("Invalid account type selected. Defaulting to Checking Account.");
+                    account = new CheckingAcc(0, accountNumber, 0.0);
+                    break;
             }
+
+            System.out.print("Initial Balance: ");
+            double balance = Double.parseDouble(sc.nextLine());
+            account.setBalance(balance);
+
+            customer.getAccounts().add(account);
+
+            // Save customer and account to database
+            accountDBI.addAccount(account, customer.getID());
+
+            System.out.println("Customer and account successfully added. Customer ID: " + customer.getID() + ", Account Number: " + accountNumber);
         } catch (SQLException e) {
-            System.err.println("Error during pay out: " + e.getMessage());
+            System.err.println("Error adding customer: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+---- Terminal output / Error message:
 
-    // Method to perform a pay-in to an account
-    public void doPayIn(Scanner sc) {
-        listCustomerAccounts(sc);
-        try {
-            System.out.println("\n--- Pay In ---");
-            System.out.print("Account Number: ");
-            int accountNumber = Integer.parseInt(sc.nextLine());
-            Account account = accountDBI.getAccountByAccountNumber(accountNumber);
+    Connected!
+Welcome to the MiniBank!
 
-            if (account != null) {
-                System.out.print("Amount to Pay In: ");
-                double amount = Double.parseDouble(sc.nextLine());
-                account.payIn(amount);
-                accountDBI.updateAccount(account);
-                System.out.println("Pay In successful. New balance: " + account.getBalance());
-            } else {
-                System.out.println("Account not found.");
-            }
-        } catch (SQLException e) {
-            System.err.println("Error during pay in: " + e.getMessage());
-        }
-    }
+Welcome to the miniBank
+1. Insert new Customer
+2. Pay out of Account
+3. Pay in to Account
+4. Show specific Customer data
+5. Show all Customer data
+6. Change Customer data
+7. Stop program
+1
+
+--- Add New Customer ---
+Surname: uehdsudhe
+Name: eudheuhdes
+Gender (M/F): M
+Birthday (YYYY-MM-DD): 2012-12-12
+Error adding customer: Ungültige Konvertierung angefordert
+java.sql.SQLException: Ungültige Konvertierung angefordert
+        at oracle.jdbc.driver.T4CVarcharAccessor.StringToNUMBER(T4CVarcharAccessor.java:787)
+        at oracle.jdbc.driver.T4CVarcharAccessor.getNUMBER(T4CVarcharAccessor.java:257)
+        at oracle.jdbc.driver.T4CVarcharAccessor.getInt(T4CVarcharAccessor.java:521)
+        at oracle.jdbc.driver.GeneratedStatement.getInt(GeneratedStatement.java:199)
+        at oracle.jdbc.driver.GeneratedScrollableResultSet.getInt(GeneratedScrollableResultSet.java:246)
+        at CustomerDBI.addCustomer(CustomerDBI.java:26)
+        at MiniBankController.addCustomer(MiniBankController.java:35)
+        at MiniBank.startMiniBankAdministration(MiniBank.java:59)
+        at MiniBank.main(MiniBank.java:14)
+Caused by: java.lang.NumberFormatException: Character A is neither a decimal digit number, decimal point, nor "e" notation exponential mark.       
+        at java.base/java.math.BigDecimal.<init>(BigDecimal.java:586)
+        at java.base/java.math.BigDecimal.<init>(BigDecimal.java:471)
+        at java.base/java.math.BigDecimal.<init>(BigDecimal.java:900)
+        at oracle.jdbc.driver.T4CVarcharAccessor.StringToNUMBER(T4CVarcharAccessor.java:782)
