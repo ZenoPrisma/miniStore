@@ -253,3 +253,55 @@ public class MiniStoreController {
      * Die Internationalität in der Progressnote aufgabe
      */
 }
+
+
+
+
+    // Method to perform a pay-out from an account
+    public void doPayOut(Scanner sc) {
+        listCustomerAccounts(sc);
+        try {
+            System.out.println("\n--- Pay Out ---");
+            System.out.print("Account Number: ");
+            int accountNumber = Integer.parseInt(sc.nextLine());
+            Account account = accountDBI.getAccountByAccountNumber(accountNumber);
+
+            if (account != null) {
+                System.out.print("Amount to Pay Out: ");
+                double amount = Double.parseDouble(sc.nextLine());
+                if (account.payOut(amount)) {
+                    accountDBI.updateAccount(account);
+                    System.out.println("Pay Out successful. New balance: " + account.getBalance());
+                } else {
+                    System.out.println("Insufficient funds.");
+                }
+            } else {
+                System.out.println("Account not found.");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error during pay out: " + e.getMessage());
+        }
+    }
+
+    // Method to perform a pay-in to an account
+    public void doPayIn(Scanner sc) {
+        listCustomerAccounts(sc);
+        try {
+            System.out.println("\n--- Pay In ---");
+            System.out.print("Account Number: ");
+            int accountNumber = Integer.parseInt(sc.nextLine());
+            Account account = accountDBI.getAccountByAccountNumber(accountNumber);
+
+            if (account != null) {
+                System.out.print("Amount to Pay In: ");
+                double amount = Double.parseDouble(sc.nextLine());
+                account.payIn(amount);
+                accountDBI.updateAccount(account);
+                System.out.println("Pay In successful. New balance: " + account.getBalance());
+            } else {
+                System.out.println("Account not found.");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error during pay in: " + e.getMessage());
+        }
+    }
